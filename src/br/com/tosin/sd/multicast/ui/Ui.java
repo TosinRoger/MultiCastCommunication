@@ -14,7 +14,7 @@ public class Ui {
 		result = ler.nextLine();
 //		ler.close();
 		System.out.println("\n");
-		
+
 		return result;
 	}
 

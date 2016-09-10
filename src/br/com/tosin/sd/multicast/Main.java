@@ -7,12 +7,9 @@ public class Main {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
-		System.out.println("Iniciado");
+		System.out.println("Iniciado Main");
 		
-		new Controller().execute();
-
-
-
+		new Controller().config();
 	}
 
 }

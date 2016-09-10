@@ -3,6 +3,7 @@ package br.com.tosin.sd.multicast.networks;
 import java.io.*;
 import java.net.*;
 
+import br.com.tosin.sd.multicast.controller.Controller;
 import utils.Constants;
 
 public class MultcastReceived implements Runnable {
@@ -25,9 +26,20 @@ public class MultcastReceived implements Runnable {
 					DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
 					if (s != null)
 						s.receive(messageIn);
-					System.out.println("Received: " + new String(messageIn.getData()));
+					
+					String response = new String(messageIn.getData());
+					if(response.startsWith(String.valueOf(Controller.getPlayer().getId()))) {
+						System.out.println("Recebi minha mensagem");
+						System.out.println("");
+					}
+					else {
+						System.out.println(Controller.getPlayer().getId() + ", received: \n\t" + response);
+						System.out.println("");
+					}
+					
+//					System.out.println("Received: " + new String(messageIn.getData()));
 //					System.out.println("B Host address: " +messageIn.);
-					System.out.println("Host Address: " + messageIn.getAddress());
+//					System.out.println("Host Address: " + messageIn.getAddress());
 					
 
 				} catch (IOException e) {

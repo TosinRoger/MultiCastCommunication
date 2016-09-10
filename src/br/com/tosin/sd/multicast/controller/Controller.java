@@ -1,10 +1,24 @@
 package br.com.tosin.sd.multicast.controller;
 
+import br.com.tosin.sd.multicast.models.MasterPlayer;
+import br.com.tosin.sd.multicast.models.Player;
 import br.com.tosin.sd.multicast.networks.MultcastReceived;
 import br.com.tosin.sd.multicast.networks.MultcastSender;
 import br.com.tosin.sd.multicast.ui.Ui;
 
 public class Controller {
+	
+	private static Player player;
+	private static MasterPlayer master;
+	
+	public void config() {
+		player = new Player();
+		master = new MasterPlayer();
+		
+		System.out.println("Player: " + player.getId() + "\n");
+		
+		execute();
+	}
 
 	public void execute() {
 
@@ -12,9 +26,7 @@ public class Controller {
 		new Thread(new MultcastReceived()).start();
 
 		
-		// fica escrevendo na tela
-		
-		
+		// espera mensagem do usuario e envia 
 		
 		new Thread(new Runnable() {
 
@@ -24,9 +36,22 @@ public class Controller {
 				MultcastSender example = new MultcastSender();
 				while (true) {
 					String temp = new Ui().getUiMessage();
-					example.send(temp);
+					if(!temp.isEmpty()) {
+						temp = String.valueOf(player.getId()) + " : " + temp;
+						example.send(temp);
+					}
 				}
 			}
 		}).run();
 	}
+
+	public static Player getPlayer() {
+		return player;
+	}
+
+	public static MasterPlayer getMaster() {
+		return master;
+	}
+	
+	
 }
