@@ -3,9 +3,9 @@ package br.com.tosin.sd.multicast.networks;
 import java.io.*;
 import java.net.*;
 
-import utils.Constants;
+import br.com.tosin.sd.multicast.utils.Constants;
 
-public class MultcastSender{
+public class MulticastSender{
 //	String message = "";
 
 	public void send(String message) {

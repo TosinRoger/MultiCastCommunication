@@ -2,14 +2,14 @@ package br.com.tosin.sd.multicast.models;
 
 public class Player {
 	
-private long id;
+	private long id;
 	
 	public Player() {
 		// TODO Auto-generated constructor stub
 		id = System.currentTimeMillis();
 	}
 	
-	public long getId() {
-		return id;
+	public String getId() {
+		return String.valueOf(id);
 	}
 }
