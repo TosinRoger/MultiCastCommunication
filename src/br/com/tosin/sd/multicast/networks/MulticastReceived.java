@@ -47,9 +47,9 @@ public class MulticastReceived implements Runnable {
 					 */
 					
 					String received = new String(messageIn.getData());
-
+					
 					response.response(received);
-
+					
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

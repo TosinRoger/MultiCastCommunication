@@ -117,8 +117,6 @@ public class HasSomeoneOnGrup {
 	 */
 	private void sendImMaster() {
 		Log.handshakeLog("EU SOU O MESTRE!!!!");
-		
-		String msg = Controller.getMaster().getId() + ":" +  "EU SOU O MESTRE!!!!";
-		new MulticastSender().send(msg);
+		new ConfigNewPlayer();
 	}
 }

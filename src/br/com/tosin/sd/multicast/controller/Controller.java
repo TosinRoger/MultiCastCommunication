@@ -44,17 +44,23 @@ public class Controller {
 					Log.deuRuim("Handshake inicial nao funfou");
 				}
 			}
-		}).execute();;
+		}).execute();
 	}
 	
+	/**
+	 * Roda o controle do jogador
+	 */
 	private void runAsPlayer() {
 		master = null;
-		
+		new ControllerPlayer(player);
 	}
 	
+	/**
+	 * Roda o controller do master
+	 */
 	private void runAsMaster() {
 		master = new MasterPlayer();
-		
+		new ControllerMaster(master);
 	}
 	
 	
