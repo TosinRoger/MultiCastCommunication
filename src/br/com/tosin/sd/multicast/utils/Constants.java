@@ -24,9 +24,7 @@ public class Constants {
 	public static final String MASTER_WORD_SELECTED_BY_THE_PLAYER = "word selected by the player";
 
 	public static final String WRONG_WORD = "Wrong word";
-	public static final String GAME_OVER = "game over";
-	
-	
+	public static final String GAME_OVER = "game over";	
 	
 	public static final String CONGRATULATIONS = "Congratulations";
 	

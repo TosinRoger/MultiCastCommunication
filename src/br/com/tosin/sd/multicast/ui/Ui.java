@@ -1,9 +1,6 @@
 package br.com.tosin.sd.multicast.ui;
 
-import java.util.Arrays;
 import java.util.Scanner;
-
-import br.com.tosin.sd.multicast.models.Player;
 
 public class Ui {
 	
@@ -108,22 +105,22 @@ public class Ui {
 			i += 2;
 		}
 		
-		for (String player : punctuation.split(";")) {
-			result += player + "\t" + player + "\n";
-		}
-		result += "\n";
-		
-				
-		
-		
-		
+		result += "\n\n";
+
 		System.out.println(result);
 	}
 	
+	public void GameOver() {
+		System.out.println("\n=======================================================");
+		System.out.println("GAME OVER!");
+		System.out.println("=======================================================\n");
+	}
+	
 	public void finish(String id) {
+		System.out.println("\n=======================================================");
 		System.out.println("Acabou!");
 		System.out.println("O jogador " + id + " ganhou!!");
-		
+		System.out.println("=======================================================\n");
 	}
 	
 	/**

@@ -11,7 +11,7 @@ import br.com.tosin.sd.multicast.utils.*;
 public class Controller {
 
 	private static final int DELAY = 5000;
-	private static final int MINIMUM_PLAYERS = 1;
+	private static final int MINIMUM_PLAYERS = 2;
 	private static final int MAXIMUM_NOTIFICATIONS = 3;
 
 	private boolean respended = false;
@@ -54,6 +54,7 @@ public class Controller {
 			public void run() {
 				// TODO Auto-generated method stub
 				boolean running = true;
+				System.out.println("vai executar Thread o game: " + running);
 				while (running) {
 					Log.game("num jogadores: " + getPlayers().size());
 					try {
@@ -62,10 +63,12 @@ public class Controller {
 							Log.master("Vai comecar essa treta!!!!!!");
 							hiddenWord = new DatabaseWords().randonWord();
 							// primeiro
+							Log.master("LIST: " + new Parser().parseListToString(getPlayers()));
 							sendData(Constants.LIST, new Parser().parseListToString(getPlayers()));
-							Thread.sleep(30*60);
+							Thread.sleep(3*1000);
 							sendData(Constants.PLAYER_SELECT_LETTER, getPlayers().get(positionOfTime).getId());
 							running = false;
+							Thread.interrupted();
 						}
 					
 						Thread.sleep(DELAY);
@@ -116,7 +119,7 @@ public class Controller {
 					e.printStackTrace();
 				}
 				Log.handshakeLog("Wait finish: " + ImMaster);
-
+System.out.println("EU SOU MESTRE:" + ImMaster);
 				if (ImMaster) {
 					getPlayers().add(0, player);
 					sendData(Constants.I_AM_A_MASTER, "");
@@ -131,14 +134,17 @@ public class Controller {
 		
 		message = message.trim();
 		String[] array = message.split(":");
-		String playerId = array[0];
-		String identify = array[1];
-		String msg = array.length == 2 ? "" : array[2];
+		String senderPlayerId = array[0];
+		String receivedIdentify = array[1];
+		String receivedMessage = array.length == 2 ? "" : array[2];
 		
+		if(receivedIdentify.equals(Constants.YOUR_CREDENTIAL) && receivedMessage.equals(getPlayer().getId())) {
+			sendData(Constants.INITIAL_HANDSHAKE, "");
+		}
 		
-		// se receber a pria mensagem de que eh um mestre, inicia o jogo
-		if (playerId.startsWith(getPlayer().getId())) {
-			if(identify.equals(Constants.I_AM_A_MASTER)) {
+		// se receber a propria mensagem de que eh um mestre, inicia o jogo
+		if (senderPlayerId.startsWith(getPlayer().getId())) {
+			if(receivedIdentify.equals(Constants.I_AM_A_MASTER)) {
 				ImMaster = true;
 				game();
 			}
@@ -154,13 +160,14 @@ public class Controller {
 			 */
 			
 
-			switch (identify) {
+			switch (receivedIdentify) {
 
 			/*
 			 * Alguem perguntou se tem alguem no canal Returnar que esta no
 			 * canal
 			 */
 			case Constants.INITIAL_HANDSHAKE:
+				Log.game("Quer entrar");
 				Log.handshakeLog("Received initial handshake: " + ImMaster + ", " + message);
 				/*
 				 * se for o mestre, envia que o mestre e envia a chave public
@@ -171,9 +178,15 @@ public class Controller {
 					sendData(Constants.I_AM_A_MASTER, "");
 					// TODO por tosin [12 de set de 2016] enviar chave publica
 
-					getPlayers().add(new Player(playerId));
+					getPlayers().add(new Player(senderPlayerId));
 
 					sendData(Constants.LIST, new Parser().parseListToString(getPlayers()));
+				}
+				// verifica se esta na lista de players senao adiciona no fim da lista
+				else {
+					if(!idAlreadyRegister(senderPlayerId)) {
+						getPlayers().add(new Player(senderPlayerId));
+					}
 				}
 				break;
 			/*
@@ -190,7 +203,7 @@ public class Controller {
 			 * a mensagem contem o id do jogador que deve "dizer" uma letra
 			 */
 			case Constants.PLAYER_SELECT_LETTER:
-				if (msg.equals(getPlayer().getId()) && nowIsLetter) {
+				if (receivedMessage.equals(getPlayer().getId()) && nowIsLetter) {
 					nowIsLetter = !nowIsLetter;
 					// jogador espera usuario digitar uma letra
 					String lettrer = new Ui().getUiLetter();
@@ -202,13 +215,15 @@ public class Controller {
 			 * Master recebe a letra e compara como a palavra oculta
 			 */
 			case Constants.MASTER_LETTER_SELECTED_BY_THE_PLAYER:
+				if (!ImMaster) 
+					break;
 				// desabilita time
 				respended = true;
 				numAttemptsNotification = 0;
 				
-				String letter = msg;
+				String letter = receivedMessage;
 				
-				Log.master("Recebeu a letra: " + msg);
+				Log.master("Recebeu a letra: " + receivedMessage);
 
 				// verfica se a letra ja foi chutada
 				if (new VerifyLetterWord().letterAlreadKick(letter, chosenLetter)) {
@@ -235,7 +250,7 @@ public class Controller {
 					e1.printStackTrace();
 				}
 
-				// verifica se achertou a palavra
+				// verifica se acertou a palavra
 				if (new VerifyLetterWord().discoveryTheWord(hiddenWord, chosenLetter)) {
 					Log.master("ACABOU!!!! ACABOU!!!! EH TETRA!!!!");
 					sendData(Constants.CONGRATULATIONS, "");
@@ -282,7 +297,7 @@ public class Controller {
 			 * Master notifica que tem que dizer uma palavra
 			 */
 			case Constants.PLAYER_SELECT_WORD: 
-				if (msg.equals(getPlayer().getId())) {
+				if (receivedMessage.equals(getPlayer().getId())) {
 					nowIsLetter = !nowIsLetter;
 					// jogador espera usuario digitar uma letra
 					String word = new Ui().getUiWord();
@@ -297,6 +312,8 @@ public class Controller {
 			 * Master recebe que o jogador chuto a palavra
 			 */
 			case Constants.MASTER_PASSING_TIME_BY_PLAYER:
+				if (!ImMaster) 
+					break;
 				Log.master("Ele passou a vez");
 				
 				nextPlayer();
@@ -316,15 +333,22 @@ public class Controller {
 				break;
 				
 			case Constants.MASTER_WORD_SELECTED_BY_THE_PLAYER:
+				if (!ImMaster) 
+					break;
 				// desabilita time
 				respended = true;
 				numAttemptsNotification = 0;
-				Log.master("Ele chuto uma palavra: " + msg);
+				Log.master("Ele chuto uma palavra: " + receivedMessage);
 				
 				// verifica se a palavra foi descoberta
-				if(hiddenWord.equals(msg)) {
+				if(hiddenWord.equals(receivedMessage)) {
 					Log.master("ACABOU!!!! ACABOU!!!! EH TETRA!!!!");
 					sendData(Constants.CONGRATULATIONS, "");
+					
+					String temp2 = new VerifyLetterWord().status(hiddenWord, chosenLetter);
+					temp2 += new Punctuation().buildPunctuation(getPlayers());
+					
+					sendData(Constants.PLAYER_PUNCTUATION, temp2);
 					
 					/*
 					 * Notifica os usuario para o novo mestre assumir
@@ -334,23 +358,24 @@ public class Controller {
 					ImMaster = false;
 					sendData(Constants.GAME_OVER, getPlayers().get(positionOfTime).getId());
 				}
-				
-				String temp2 = new VerifyLetterWord().status(hiddenWord, chosenLetter);
-				temp2 += new Punctuation().buildPunctuation(getPlayers());
-				
-				sendData(Constants.PLAYER_PUNCTUATION, temp2);
-				
-				try {
-					Thread.sleep(DELAY);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				else {
+					String temp2 = new VerifyLetterWord().status(hiddenWord, chosenLetter);
+					temp2 += new Punctuation().buildPunctuation(getPlayers());
+					
+					sendData(Constants.PLAYER_PUNCTUATION, temp2);
+					
+					try {
+						Thread.sleep(DELAY);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					nextPlayer();
+					Log.master("ERRO!! Proximo!!!!");
+	
+					sendData(Constants.PLAYER_SELECT_LETTER, getPlayers().get(positionOfTime).getId());
 				}
-				
-				nextPlayer();
-				Log.master("ERRO!! Proximo!!!!");
-
-				sendData(Constants.PLAYER_SELECT_LETTER, getPlayers().get(positionOfTime).getId());
 				break;
 
 			/*
@@ -358,11 +383,11 @@ public class Controller {
 			 */
 			case Constants.PLAYER_HIT_THE_LETTER:
 
-				if (msg.equals(Constants.LETTER_ALREAD_CHOSEN)) {
+				if (receivedMessage.equals(Constants.LETTER_ALREAD_CHOSEN)) {
 					new Ui().setUiLetterAlreadChoisen();
-				} else if (msg.equals(Constants.LETTER_WRONG)) {
+				} else if (receivedMessage.equals(Constants.LETTER_WRONG)) {
 					new Ui().setUiLetterWrong();
-				} else if (msg.equals(Constants.LETTER_RIGHT)) {
+				} else if (receivedMessage.equals(Constants.LETTER_RIGHT)) {
 					new Ui().setUiLetterRight();
 				}
 
@@ -370,21 +395,42 @@ public class Controller {
 				
 			case Constants.PLAYER_PUNCTUATION:
 				
-				System.out.println("Pontuacao recebido\n"+msg+"\n");
-				new Ui().showPunctuation(msg);
+				new Ui().showPunctuation(receivedMessage);
 
 				break;
 
 			/*
-			 * Master notifica que o jogo acabou, e o proximo jogador deve
+			 * Master notifica que o jogo acabou, e envia id do proximo jogador que deve
 			 * assumir o papel de mestre
 			 */
 			case Constants.GAME_OVER:
-				if(getPlayer().getId().equals(msg)) {
+				// receivedMessege contem o id do jogador que sera o mestre
+				new Ui().finish(receivedMessage);
+				System.out.println("game_over, new master will be: " + receivedMessage);
+				nowIsLetter = true;
+				if(getPlayer().getId().equals(receivedMessage)) {
 					ImMaster = true;
 					getPlayers().clear();
 					getPlayers().add(getPlayer());
+					chosenLetter.clear();
+					System.out.println("list size: " + getPlayers().size());
+					
+					// envia mensagem para o antigo mestre pedindo sua credenciais
+
+					sendData(Constants.YOUR_CREDENTIAL, senderPlayerId);
+					
 					game();
+				}
+				// se nao for o novo mestre envia um handshake para o novo mestre
+				else {
+					try {
+						Thread.sleep(DELAY);
+						sendData(Constants.INITIAL_HANDSHAKE, "");
+
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 				break;
 
@@ -393,7 +439,7 @@ public class Controller {
 			 */
 			case Constants.LIST:
 				getPlayers().clear();
-				getPlayers().addAll(new Parser().parseStringToList(msg));
+				getPlayers().addAll(new Parser().parseStringToList(receivedMessage));
 				
 				Log.game("LIST: " + new Parser().parseListToString(getPlayers()));
 				
@@ -403,7 +449,7 @@ public class Controller {
 			 * Acertou a palavra
 			 */
 			case Constants.CONGRATULATIONS:
-
+				new Ui().GameOver();
 				break;
 
 			default:
@@ -481,6 +527,14 @@ public class Controller {
 		if(positionOfTime == getPlayers().size()) {
 			positionOfTime = 1;
 		}
+	}
+	
+	private boolean idAlreadyRegister(String id) {
+		for (Player item : getPlayers()) {
+			if (item.getId().equals(id))
+				return true;
+		}
+		return false;
 	}
 
 	// ============================================================================
