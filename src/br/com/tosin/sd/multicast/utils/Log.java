@@ -6,20 +6,20 @@ import java.util.Date;
 public class Log {
 
 	public static void handshakeLog(String msg) {
-		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date(System.currentTimeMillis()));
-
+//		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date(System.currentTimeMillis()));
+//
 //		System.out.println(date + " Handshake: " + msg);
 	}
 	
 	public static void deuRuim(String msg) {
 		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date(System.currentTimeMillis()));
 
-//		System.out.println(date + " Deu ruim: " + msg);
+		System.out.println(date + " Deu ruim: " + msg);
 	}
 	
 	public static void game(String msg) {
-		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date(System.currentTimeMillis()));
-
+//		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date(System.currentTimeMillis()));
+//
 //		System.out.println(date + " Deu ruim: " + msg);
 	}
 

@@ -1,5 +1,11 @@
 package br.com.tosin.sd.multicast.controller;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.security.PublicKey;
 import java.util.*;
 
 import br.com.tosin.sd.multicast.interfaces.Response;
@@ -106,7 +112,7 @@ public class Controller {
 	private void askAnotherPlayer() {
 
 		Log.handshakeLog("Send Initical handshake");
-		sendData(Constants.INITIAL_HANDSHAKE, getPlayer().getPublicKey().toString());
+		sendData(Constants.INITIAL_HANDSHAKE, convertPublicKey(getPlayer().getPublicKey()));
 
 		new Thread(new Runnable() {
 
@@ -126,7 +132,7 @@ public class Controller {
 					e.printStackTrace();
 				}
 				Log.handshakeLog("Wait finish: " + ImMaster);
-System.out.println("EU SOU MESTRE:" + ImMaster);
+				
 				if (ImMaster) {
 					getPlayers().add(0, player);
 					sendData(Constants.I_AM_A_MASTER, "");
@@ -141,12 +147,21 @@ System.out.println("EU SOU MESTRE:" + ImMaster);
 		
 		message = message.trim();
 		String[] array = message.split(":");
-		String senderPlayerId = array[0];
-		String receivedIdentify = array[1];
-		String receivedMessage = array.length == 2 ? "" : array[2];
+		String senderPlayerId = array.length >= 1 ? array[0] : "";
+		String receivedIdentify = array.length >= 2 ? array[1] : "";
+		String receivedMessage = array.length == 3 ? array[2] : "";
+		
+		// descriptogra mensagem se for != INITIAL_HANDSHAKE
+//		
+//		if(!Constants.INITIAL_HANDSHAKE.equals(receivedIdentify)) {
+//			receivedMessage = Criptography.decriptografa(receivedMessage, getPlayer().getPrivateKey());
+//			
+//			if(receivedMessage == null)
+//				return;
+//		}
 		
 		if(receivedIdentify.equals(Constants.YOUR_CREDENTIAL) && receivedMessage.equals(getPlayer().getId())) {
-			sendData(Constants.INITIAL_HANDSHAKE, "");
+			sendData(Constants.INITIAL_HANDSHAKE, convertPublicKey(getPlayer().getPublicKey()));
 		}
 		
 		// se receber a propria mensagem de que eh um mestre, inicia o jogo
@@ -185,7 +200,9 @@ System.out.println("EU SOU MESTRE:" + ImMaster);
 					sendData(Constants.I_AM_A_MASTER, "");
 					// TODO por tosin [12 de set de 2016] enviar chave publica
 
-					getPlayers().add(new Player(senderPlayerId));
+					Player newPlayer = new Player(senderPlayerId);
+					newPlayer.setPublicKey(recoveryPublicKey(receivedMessage));
+					getPlayers().add(newPlayer);
 
 					sendData(Constants.LIST, new Parser().parseListToString(getPlayers()));
 				}
@@ -432,7 +449,7 @@ System.out.println("EU SOU MESTRE:" + ImMaster);
 				else {
 					try {
 						Thread.sleep(DELAY);
-						sendData(Constants.INITIAL_HANDSHAKE, "");
+						sendData(Constants.INITIAL_HANDSHAKE, convertPublicKey(getPlayers().get(positionOfTime).getPublicKey()));
 
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
@@ -473,10 +490,10 @@ System.out.println("EU SOU MESTRE:" + ImMaster);
 	 * @param data
 	 *            Mensagem que esta sendo enviada
 	 */
-	private void sendData(String identify, String data) {
+	private void sendData(final String identify, final String data) {
 		
-		String message = getPlayer().getId() + ":" + identify + ":" + data;
-		new MulticastSender().send(message);
+//		String message = getPlayer().getId() + ":" + identify + ":" + data;
+//		new MulticastSender().send(message);
 		
 		/*
 		 * Se o jogador estiver enviando a letra ou a palavra
@@ -484,46 +501,57 @@ System.out.println("EU SOU MESTRE:" + ImMaster);
 		 * 
 		 * Senao simplemente envia a mensagem
 		 */
-//		if(identify.equals(Constants.PLAYER_SELECT_LETTER) || identify.equals(Constants.PLAYER_SELECT_WORD)){
-//			
-//			try {
-//				respended = false;
-//				// tenta envia algumas vezes senao der certo envia para um no jogador
-//				while (numAttemptsNotification < MAXIMUM_NOTIFICATIONS) {
-//					String message = getPlayer().getId() + ":" + identify + ":" + data;
-//					new MulticastSender().send(message);
-//	
-//					// aguarda 1 minuto para tentar enviar novamente
-//					Thread.sleep(1*60*1000);
-//					
-//					if(respended) {
-//						numAttemptsNotification = 0;
-//						Thread.interrupted();
-//					}
-//					else {
-//						numAttemptsNotification++;
-//					}
-//					Log.deuRuim("Nao recebeu a resposta: " + (numAttemptsNotification + 1));
-//				}
-//				
-//				if(!respended && numAttemptsNotification >= MAXIMUM_NOTIFICATIONS) {
-//					new Ui().timeEnd(getPlayers().get(positionOfTime).getId());
-//					
-//					nextPlayer();
-//					// requisita letra do proximo jogador
-//					sendData(Constants.PLAYER_SELECT_LETTER, getPlayers().get(positionOfTime).getId());
-//				}
-//				
-//				
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}
-//		else {
-//			String message = getPlayer().getId() + ":" + identify + ":" + data;
-//			new MulticastSender().send(message);
-//		}
+		if(identify.equals(Constants.PLAYER_SELECT_LETTER) || identify.equals(Constants.PLAYER_SELECT_WORD)){
+			respended = false;
+			
+			new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					while (numAttemptsNotification < MAXIMUM_NOTIFICATIONS) {
+						String message = getPlayer().getId() + ":" + identify + ":" + data;
+						new MulticastSender().send(message);
+		
+						// aguarda 1 minuto para tentar enviar novamente
+						try {
+							Thread.sleep(10*1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+						if(respended) {
+							numAttemptsNotification = 0;
+//								Thread.interrupted();
+							break;
+						}
+						else {
+							numAttemptsNotification++;
+						}
+						Log.deuRuim("Nao recebeu a resposta: " + (numAttemptsNotification + 1));
+					}
+					
+					if(!respended && numAttemptsNotification >= MAXIMUM_NOTIFICATIONS) {
+						if(positionOfTime < getPlayers().size())
+							new Ui().timeEnd(getPlayers().get(positionOfTime).getId());
+						
+						numAttemptsNotification = 0;
+						respended = false;
+						nextPlayer();
+						// requisita letra do proximo jogador
+						sendData(Constants.PLAYER_SELECT_LETTER, getPlayers().get(positionOfTime).getId());
+						
+					}
+				}
+			}).start();
+			// tenta envia algumas vezes senao der certo envia para um no jogador
+				
+		}
+		else {
+			String message = getPlayer().getId() + ":" + identify + ":" + data;
+			new MulticastSender().send(message);
+		}
 	}
 
 	
@@ -543,31 +571,64 @@ System.out.println("EU SOU MESTRE:" + ImMaster);
 		}
 		return false;
 	}
+	
+	private String convertPublicKey(PublicKey publicKey) {
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    	ObjectOutputStream oos;
+    	String result = "";
+		try {
+			oos = new ObjectOutputStream(buffer);
 
-	// ============================================================================
+	    	oos.writeObject(publicKey);
+	    	
+			oos.close();
+			
+			result = new String(buffer.toByteArray(), "ISO-8859-1");
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+
+	private PublicKey recoveryPublicKey(String message) {
+		
+		ObjectInputStream inputStream = null;
+		PublicKey publicKey = null;
+		try{
+			
+			byte[] array = message.getBytes("ISO-8859-1");
+			ByteArrayInputStream bis = new ByteArrayInputStream(array);
+	
+	    	inputStream = new ObjectInputStream(bis);
+			
+			publicKey = (PublicKey) inputStream.readObject();
+		} catch (IOException | ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return publicKey;
+	}
 
 	public Player getPlayer() {
 		return player;
 	}
 
-//	public MasterPlayer getMaster() {
-//		return master;
-//	}
-//
-//	public void setMaster(MasterPlayer master) {
-//		this.master = master;
-//	}
-
-//	public List<String> getIdPlayers() {
-//		if (idPlayers == null)
-//			idPlayers = new ArrayList<>();
-//		return idPlayers;
-//	}
-
 	public List<Player> getPlayers() {
 		if(players == null) 
 			players = new ArrayList<>();
 		return players;
+	}
+	
+	public Player getPlayerById(String id) {
+		for (Player player : getPlayers()) {
+			if(player.getId().equals(id))
+				return player;
+		}
+		return null;
 	}
 
 }
