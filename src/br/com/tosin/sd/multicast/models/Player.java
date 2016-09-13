@@ -1,12 +1,14 @@
 package br.com.tosin.sd.multicast.models;
 
-import br.com.tosin.sd.multicast.security.BuildKeyWith16Bytes;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 public class Player {
 	
 	private long id;
 	
-	private String privateKey;
+	private PrivateKey privateKey;
+	private PublicKey publicKey;
 	private int punctuation;
 	
 	public Player() {
@@ -22,11 +24,20 @@ public class Player {
 		return String.valueOf(id);
 	}
 
-	public String getPrivateKey() {
-		if (privateKey == null || privateKey.isEmpty()) {
-			privateKey = BuildKeyWith16Bytes.newKey();
-		}
+	public PrivateKey getPrivateKey() {
 		return privateKey;
+	}
+
+	public void setPrivateKey(PrivateKey privateKey2) {
+		this.privateKey = privateKey2;
+	}
+
+	public PublicKey getPublicKey() {
+		return publicKey;
+	}
+
+	public void setPublicKey(PublicKey publicKey2) {
+		this.publicKey = publicKey2;
 	}
 
 	public int getPunctuation() {

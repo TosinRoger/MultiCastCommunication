@@ -5,6 +5,7 @@ import java.util.*;
 import br.com.tosin.sd.multicast.interfaces.Response;
 import br.com.tosin.sd.multicast.models.Player;
 import br.com.tosin.sd.multicast.networks.*;
+import br.com.tosin.sd.multicast.security.Criptography;
 import br.com.tosin.sd.multicast.ui.Ui;
 import br.com.tosin.sd.multicast.utils.*;
 
@@ -35,6 +36,12 @@ public class Controller {
 		 * handshake inicial, caso seja o caso e usar o setMasterPlayer
 		 */
 		player = new Player();
+		
+		// adiciona a chave public e privada no jogador
+		Criptography cripty = new Criptography();
+		cripty.buildKey();
+		player.setPrivateKey(cripty.getPrivateKey());
+		player.setPublicKey(cripty.getPublicKey());
 
 		System.out.println("Esse sou eu: " + player.getId() + "\n");
 
@@ -99,7 +106,7 @@ public class Controller {
 	private void askAnotherPlayer() {
 
 		Log.handshakeLog("Send Initical handshake");
-		sendData(Constants.INITIAL_HANDSHAKE, "");
+		sendData(Constants.INITIAL_HANDSHAKE, getPlayer().getPublicKey().toString());
 
 		new Thread(new Runnable() {
 
