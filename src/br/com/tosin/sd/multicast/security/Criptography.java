@@ -1,8 +1,9 @@
 package br.com.tosin.sd.multicast.security;
 
+import java.io.UnsupportedEncodingException;
 import java.security.*;
 
-import javax.crypto.Cipher;
+import javax.crypto.*;
 
 
 public class Criptography {
@@ -26,7 +27,7 @@ public class Criptography {
 	/**
      * Criptografa o texto puro usando chave pública.
      */
-    public static String criptografa(String texto, PrivateKey chave) {
+    public static String criptografa(String texto, PublicKey chave) {
       byte[] cipherText = null;
       String result = "";
       
@@ -48,24 +49,43 @@ public class Criptography {
     /**
      * Decriptografa o texto puro usando chave privada.
      */
-    public static String decriptografa(String message, PublicKey chave) {
+    public static String decriptografa(String message, PrivateKey chave) {
       byte[] dectyptedText = null;
+      String result = "";
+      
+      if(chave == null)
+    	  return result;
       
       try {
 
         byte[] texto = message.getBytes("ISO-8859-1");
           
-        final Cipher cipher = Cipher.getInstance(ALGORITHM);
+        final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         // Decriptografa o texto puro usando a chave Privada
         cipher.init(Cipher.DECRYPT_MODE, chave);
         dectyptedText = cipher.doFinal(texto);
        
-   
-      } catch (Exception ex) {
-        ex.printStackTrace();
-      }
+        result = new String(dectyptedText);
+      } catch (InvalidKeyException e) {
+    	 e.printStackTrace();
+      } catch (BadPaddingException e) {
+		// TODO: handle exception
+//    	  e.printStackTrace();
+      } catch (IllegalBlockSizeException e) {
+		// TODO: handle exception
+    	  e.printStackTrace();
+      } catch (UnsupportedEncodingException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (NoSuchAlgorithmException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (NoSuchPaddingException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} 
       
-      return new String(dectyptedText);
+      return result;
     }
 	
 	public PublicKey getPublicKey() {
