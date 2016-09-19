@@ -13,7 +13,8 @@ import br.com.tosin.sd.multicast.utils.*;
 
 public class Controller {
 
-	private static final int DELAY = 5000;
+	private static final int DELAY = 10* 1000;
+	private static final int MICRO_DELAY = 1 * 1000;
 	private static final int MINIMUM_PLAYERS = 2;
 	private static final int MAXIMUM_NOTIFICATIONS = 3;
 
@@ -203,7 +204,7 @@ public class Controller {
 					// se o jogador ainda nao esta na lista adiciona o jogador
 					if (!idAlreadyRegister(senderPlayerId)) {
 						Player newPlayer = new Player(senderPlayerId);
-						newPlayer.setPublicKey(recoveryPublicKey(receivedMessage));
+//						newPlayer.setPublicKey(recoveryPublicKey(receivedMessage));
 						getPlayers().add(newPlayer);
 					}
 					
@@ -219,8 +220,8 @@ public class Controller {
 				ImMaster = false;
 				Log.handshakeLog("im not a master: " + ImMaster);
 				
-				if (!receivedMessage.isEmpty())
-					publicKeyMaster = recoveryPublicKey(receivedMessage);
+//				if (!receivedMessage.isEmpty())
+//					publicKeyMaster = recoveryPublicKey(receivedMessage);
 
 				break;
 
@@ -269,13 +270,6 @@ public class Controller {
 					}
 				}
 
-				try {
-					Thread.sleep(DELAY);
-				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-
 				// verifica se acertou a palavra
 				if (VerifyLetterWord.discoveryTheWord(hiddenWord, chosenLetter)) {
 					Log.master("ACABOU!!!! ACABOU!!!! EH TETRA!!!!");
@@ -308,7 +302,7 @@ public class Controller {
 					sendData(Constants.PLAYER_PUNCTUATION, temp);
 
 					try {
-						Thread.sleep(DELAY);
+						Thread.sleep(MICRO_DELAY);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -387,13 +381,6 @@ public class Controller {
 
 					sendData(Constants.PLAYER_PUNCTUATION, temp2);
 
-					try {
-						Thread.sleep(DELAY);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-
 					nextPlayer();
 					Log.master("ERRO!! Proximo!!!!");
 
@@ -449,7 +436,7 @@ public class Controller {
 				// mestre
 				else {
 					try {
-						Thread.sleep(DELAY);
+						Thread.sleep(MICRO_DELAY);
 						sendData(Constants.INITIAL_HANDSHAKE,
 								convertPublicKey(getPlayers().get(positionOfTime).getPublicKey()));
 
