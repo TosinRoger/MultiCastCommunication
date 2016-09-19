@@ -252,13 +252,13 @@ public class Controller {
 				Log.master("Recebeu a letra: " + receivedMessage);
 
 				// verfica se a letra ja foi chutada
-				if (new VerifyLetterWord().letterAlreadKick(letter, chosenLetter)) {
+				if (VerifyLetterWord.letterAlreadKick(letter, chosenLetter)) {
 					Log.master("Que burro a letra ja foi usada!!!!");
 					getPlayers().get(positionOfTime).setPunctuation(new Punctuation().punctuationWrong());
 					sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_ALREAD_CHOSEN);
 				} else {
 					chosenLetter.add(letter);
-					if (new VerifyLetterWord().hitTheLetter(hiddenWord, letter)) {
+					if (VerifyLetterWord.hitTheLetter(hiddenWord, letter)) {
 						Log.master("Acertou a letra");
 						getPlayers().get(positionOfTime).setPunctuation(new Punctuation().punctuationRight());
 						sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_RIGHT);
@@ -277,11 +277,11 @@ public class Controller {
 				}
 
 				// verifica se acertou a palavra
-				if (new VerifyLetterWord().discoveryTheWord(hiddenWord, chosenLetter)) {
+				if (VerifyLetterWord.discoveryTheWord(hiddenWord, chosenLetter)) {
 					Log.master("ACABOU!!!! ACABOU!!!! EH TETRA!!!!");
 					sendData(Constants.CONGRATULATIONS, "");
 
-					String temp = new VerifyLetterWord().status(hiddenWord, chosenLetter);
+					String temp = VerifyLetterWord.status(hiddenWord, chosenLetter);
 					temp += new Punctuation().buildPunctuation(getPlayers());
 
 					sendData(Constants.PLAYER_PUNCTUATION, temp);
@@ -300,7 +300,7 @@ public class Controller {
 					// envia pontucao e pergunta a palavra
 
 					Log.master("acertou a letre, mas me diga, qual eh a palavra?");
-					String temp = new VerifyLetterWord().status(hiddenWord, chosenLetter);
+					String temp = VerifyLetterWord.status(hiddenWord, chosenLetter);
 					temp += new Punctuation().buildPunctuation(getPlayers());
 
 					System.out.println("\n" + temp + "\n");
@@ -346,7 +346,7 @@ public class Controller {
 
 				// mostra pontuacao
 
-				String temp = new VerifyLetterWord().status(hiddenWord, chosenLetter);
+				String temp = VerifyLetterWord.status(hiddenWord, chosenLetter);
 				temp += new Punctuation().buildPunctuation(getPlayers());
 
 				sendData(Constants.PLAYER_PUNCTUATION, temp);
@@ -369,7 +369,7 @@ public class Controller {
 					Log.master("ACABOU!!!! ACABOU!!!! EH TETRA!!!!");
 					sendData(Constants.CONGRATULATIONS, "");
 
-					String temp2 = new VerifyLetterWord().status(hiddenWord, chosenLetter);
+					String temp2 = VerifyLetterWord.status(hiddenWord, chosenLetter);
 					temp2 += new Punctuation().buildPunctuation(getPlayers());
 
 					sendData(Constants.PLAYER_PUNCTUATION, temp2);
@@ -382,7 +382,7 @@ public class Controller {
 					ImMaster = false;
 					sendData(Constants.GAME_OVER, getPlayers().get(positionOfTime).getId());
 				} else {
-					String temp2 = new VerifyLetterWord().status(hiddenWord, chosenLetter);
+					String temp2 = VerifyLetterWord.status(hiddenWord, chosenLetter);
 					temp2 += new Punctuation().buildPunctuation(getPlayers());
 
 					sendData(Constants.PLAYER_PUNCTUATION, temp2);

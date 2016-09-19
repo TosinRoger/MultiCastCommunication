@@ -11,7 +11,7 @@ public class VerifyLetterWord {
 	 * @param chosenLetter lista de letras chutadas
 	 * @return String[] com as letras acertadas e * com as letras erradas
 	 */
-	public String[] discoveredLetter(String hiddenWord, List<String> chosenLetter) {
+	public static String[] discoveredLetter(String hiddenWord, List<String> chosenLetter) {
 		String[] discovered = new String[hiddenWord.length()];
 		
 		for (int i = 0; i < discovered.length; i++) {
@@ -35,7 +35,7 @@ public class VerifyLetterWord {
 	 * @param chosenLetter
 	 * @return
 	 */
-	public boolean letterAlreadKick(String hiddenWord, List<String> chosenLetter) {
+	public static boolean letterAlreadKick(String hiddenWord, List<String> chosenLetter) {
 		for (int i = 0; i < hiddenWord.length(); i++) {
 			for (String chosen : chosenLetter) {
 				if (hiddenWord.charAt(i) == chosen.charAt(0)) {
@@ -52,7 +52,7 @@ public class VerifyLetterWord {
 	 * @param letter
 	 * @return
 	 */
-	public boolean hitTheLetter(String hiddenWord, String letter) {
+	public static boolean hitTheLetter(String hiddenWord, String letter) {
 		
 		for (int i = 0; i < hiddenWord.length(); i++) {
 			if(hiddenWord.charAt(i) == letter.charAt(0))
@@ -61,7 +61,7 @@ public class VerifyLetterWord {
 		return false;
 	}
 	
-	public boolean discoveryTheWord(String hiddenWord, List<String> chosenLetter) {
+	public static boolean discoveryTheWord(String hiddenWord, List<String> chosenLetter) {
 		String[] result = discoveredLetter(hiddenWord, chosenLetter);
 		
 		for (int i = 0; i < result.length; i++) {
@@ -71,7 +71,7 @@ public class VerifyLetterWord {
 		return true;
 	}
 	
-	public String status(String hidem, List<String> chosen) {
+	public static String status(String hidem, List<String> chosen) {
 		String result = "";
 		String jj = Arrays.toString(discoveredLetter(hidem, chosen));
 		result += jj + ";";
