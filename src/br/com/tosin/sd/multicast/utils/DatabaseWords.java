@@ -17,6 +17,8 @@ public class DatabaseWords {
 		List<String> words = new ArrayList<>();
 		
 		words.add("camundongo");
+		words.add("casa");
+		words.add("testes");
 		
 		return words;
 	}

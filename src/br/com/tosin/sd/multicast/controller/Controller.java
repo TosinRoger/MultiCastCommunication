@@ -131,6 +131,7 @@ public class Controller {
 					getPlayers().add(player);
 				}
 
+				System.out.println("Numero de jogadores: " + getPlayers().size());
 				if (!gameStarted && getPlayers().size() > MINIMUM_PLAYERS) {
 					gameStarted = true;
 					startTheGame();
@@ -184,6 +185,17 @@ public class Controller {
 			letter = receivedMessage;
 
 			ui.showSimpleMessage("Recebeu a letra: " + letter);
+			
+			if (letter.isEmpty()) {
+				String temp = VerifyLetterWord.status(hiddenWord, chosenLetter);
+				temp += Punctuation.buildPunctuation(getPlayers());
+
+				sendData(Constants.PLAYER_PUNCTUATION, temp, "");
+
+				String encode = "nada";
+				sendData(Constants.PLAYER_SELECT_WORD, encode, currentPlayer.getId());
+				break;
+			}
 
 			// verfica se a letra ja foi chutada
 			if (VerifyLetterWord.letterAlreadKick(letter, chosenLetter)) {
@@ -218,7 +230,6 @@ public class Controller {
 				/*
 				 * Notifica os usuario para o novo mestre assumir
 				 */
-				currentPlayer = ManagesTheList.nextPlayer(getPlayers(), player, currentPlayer);
 				ImMaster = false;
 				sendData(Constants.GAME_OVER, currentPlayer.getId(), currentPlayer.getId());
 
@@ -298,9 +309,8 @@ public class Controller {
 				/*
 				 * Notifica os usuario para o novo mestre assumir
 				 */
-				currentPlayer = ManagesTheList.nextPlayer(getPlayers(), player, currentPlayer);
 				ImMaster = false;
-				sendData(Constants.GAME_OVER, currentPlayer.getId(), "");
+				sendData(Constants.GAME_OVER, currentPlayer.getId(), currentPlayer.getId());
 			} else {
 				String temp2 = VerifyLetterWord.status(hiddenWord, chosenLetter);
 				temp2 += Punctuation.buildPunctuation(getPlayers());
@@ -321,25 +331,28 @@ public class Controller {
 		 */
 		case Constants.GAME_OVER:
 			// receivedMessege contem o id do jogador que sera o mestre
-			new Ui().finish(receivedMessage);
-			System.out.println("Fim de jogo o novo mestre sera: " + receivedMessage);
+			String decripto = receivedMessage;
+			new Ui().finish(decripto);
+			System.out.println("Fim de jogo o novo mestre sera: " + decripto);
 			nowIsLetter = true;
-			if (player.getId().equals(receivedMessage)) {
+			if (player.getId().equals(decripto)) {
 				ImMaster = true;
+				gameStarted = false;
 				getPlayers().clear();
 				getPlayers().add(player);
 				chosenLetter.clear();
-				System.out.println("list size: " + getPlayers().size());
+				hiddenWord = "";
 
 				// envia mensagem para o antigo mestre pedindo sua
 				// credenciais
 
-				startTheGame();
+//				startTheGame();
 			}
 			// se nao for o novo mestre envia um handshake para o novo
 			// mestre
 			else {
-				String publicKey = convertPublicKey(currentPlayer.getPublicKey());
+				ImMaster = false;
+				String publicKey = convertPublicKey(player.getPublicKey());
 				sendData(Constants.INITIAL_HANDSHAKE, publicKey, "");
 			}
 			break;

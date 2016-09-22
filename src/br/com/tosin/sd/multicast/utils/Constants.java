@@ -30,7 +30,6 @@ public class Constants {
 	
 	public static final String PLAYER_PUNCTUATION = "punctuation";
 	
-	
 	public static final String LETTER_ALREAD_CHOSEN = "Letter alread chosen";
 	public static final String LETTER_WRONG = "Letter wrong";
 	public static final String LETTER_RIGHT = "Letter right";

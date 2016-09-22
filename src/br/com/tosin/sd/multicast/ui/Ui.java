@@ -1,8 +1,12 @@
 package br.com.tosin.sd.multicast.ui;
 
+import java.io.*;
 import java.util.Scanner;
 
+
 public class Ui {
+
+	private int WAIT = 9 * 1000;
 
 	public void showSimpleMessage(String msg) {
 		System.out.println(msg);
@@ -18,11 +22,21 @@ public class Ui {
 
 		System.out.println("Senao souber a palavra digite 0");
 		System.out.print("Qual eh a palavra: \n");
-		@SuppressWarnings("resource")
-		Scanner ler = new Scanner(System.in);
-
-		result = ler.nextLine();
-		System.out.println("\n");
+		BufferedReader console = new BufferedReader( new InputStreamReader(System.in));
+		try {
+			long TIME = System.currentTimeMillis();
+			long delay = 0;
+			while (delay < WAIT ) {
+				if (console.ready()) {
+					result = console.readLine();
+					break;
+				}
+				delay = System.currentTimeMillis() - TIME;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		return result;
 	}
@@ -35,21 +49,22 @@ public class Ui {
 	public String getUiLetter() {
 		String result = "";
 
-		do {
-			// TODO por tosin [12 de set de 2016] tem que verficicar se eh uma
-			// letra, nao um simbolo
-
-			System.out.print("Digite uma letra: \n");
-			@SuppressWarnings("resource")
-			Scanner ler = new Scanner(System.in);
-
-			result = ler.nextLine();
-			System.out.println("\n");
-
-			if (result.length() != 1) {
-				System.out.println("Nao foi digita uma unica letra!!");
+		System.out.print("Digite uma letra: \n");
+		BufferedReader console = new BufferedReader( new InputStreamReader(System.in));
+		try {
+			long TIME = System.currentTimeMillis();
+			long delay = 0;
+			while (delay < WAIT ) {
+				if (console.ready()) {
+					result = console.readLine();
+					break;
+				}
+				delay = System.currentTimeMillis() - TIME;
 			}
-		} while (result.length() != 1);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		return result;
 	}
