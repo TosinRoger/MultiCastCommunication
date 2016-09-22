@@ -163,10 +163,9 @@ public class Controller {
 
 			if (whoShouldReceive.equals(player.getId()) && nowIsLetter) {
 				String received = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
-				System.out.println("Sou eu mesmo");
 				// jogador espera usuario digitar uma letra
 				String letter = new Ui().getUiLetter();
-				String encrypt = letter;
+				String encrypt = Criptography.criptografa(letter, publicKeyMaster);
 				sendData(Constants.MASTER_LETTER_SELECTED_BY_THE_PLAYER, encrypt, "nada");
 			} else {
 				nowIsLetter = true;
@@ -184,7 +183,7 @@ public class Controller {
 			numAttemptsNotification = 0;
 
 			// TODO por tosin [21 de set de 2016] Decriptografar
-			String letter = "";
+			String letter = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
 			letter = receivedMessage;
 
 			ui.showSimpleMessage("Recebeu a letra: " + letter);
@@ -195,7 +194,7 @@ public class Controller {
 
 				sendData(Constants.PLAYER_PUNCTUATION, temp, "nada");
 
-				String encode = "nada";
+				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
 				sendData(Constants.PLAYER_SELECT_WORD, encode, currentPlayer.getId());
 				break;
 			}
@@ -247,7 +246,7 @@ public class Controller {
 
 				sendData(Constants.PLAYER_PUNCTUATION, temp, "nada");
 
-				String encode = "nada";
+				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
 				sendData(Constants.PLAYER_SELECT_WORD, encode, currentPlayer.getId());
 			}
 			break;
@@ -257,10 +256,14 @@ public class Controller {
 		 */
 		case Constants.PLAYER_SELECT_WORD:
 			if (whoShouldReceive.equals(player.getId())) {
+				String received = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
+				if (received.equals(Constants.EMPTY))
+					ui.showSimpleMessage("Mensagem chegou errada");
+				
 				nowIsLetter = !nowIsLetter;
 				// jogador espera usuario digitar uma letra
 				String word = new Ui().getUiWord();
-				String encrypt = word;
+				String encrypt = Criptography.criptografa(word, publicKeyMaster);
 				if (word.length() == 1)
 					sendData(Constants.MASTER_WORD_SELECTED_BY_THE_PLAYER, "nada", "nada");
 				else
@@ -296,7 +299,7 @@ public class Controller {
 			numAttemptsNotification = 0;
 
 			// TODO por tosin [22 de set de 2016] decriptar
-			String word = receivedMessage;
+			String word = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
 			ui.showSimpleMessage("Player: " + senderPlayerId + " chutou a palavra: " + word);
 
 			// verifica se a palavra foi descoberta
@@ -319,9 +322,14 @@ public class Controller {
 				temp2 += Punctuation.buildPunctuation(getPlayers());
 
 				sendData(Constants.PLAYER_PUNCTUATION, temp2, "nada");
-
-				currentPlayer = ManagesTheList.nextPlayer(getPlayers(), player, currentPlayer);
-				Log.master("ERRO!! Proximo!!!!");
+				
+				if (word.equals(Constants.EMPTY)) {
+					Log.master("PASSOU A VEZ!! Proximo!!!!");
+				}
+				else {
+					currentPlayer = ManagesTheList.nextPlayer(getPlayers(), player, currentPlayer);
+					Log.master("ERRO!! Proximo!!!!");
+				}
 
 				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
 				sendData(Constants.PLAYER_SELECT_LETTER, encode, currentPlayer.getId());
