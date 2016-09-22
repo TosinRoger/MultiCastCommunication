@@ -88,7 +88,7 @@ public class Controller {
 	private void askAnotherPlayer() {
 
 		String publicKey = convertPublicKey(player.getPublicKey());
-		sendData(Constants.INITIAL_HANDSHAKE, publicKey, "");
+		sendData(Constants.INITIAL_HANDSHAKE, publicKey, "nada");
 	}
 
 	/**
@@ -99,19 +99,20 @@ public class Controller {
 		ui.showSimpleMessage("Vai comecar o jogo!!!!");
 		hiddenWord = new DatabaseWords().randonWord();
 		currentPlayer = ManagesTheList.nextPlayer(getPlayers(), player, null);
-		String encode = "nada";
+		
+		String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
 		System.out.println("Primeiro jogador sera: " + currentPlayer.getId());
 		sendData(Constants.PLAYER_SELECT_LETTER, encode, currentPlayer.getId());
 	}
 
 	private void processesMessage(String message) {
 		message = message.trim();
-		String[] array = message.split(":");
+		String[] array = message.split(" - ");
 		String senderPlayerId = array.length >= 1 ? array[0] : "";
 		String receivedIdentifier = array.length >= 2 ? array[1] : "";
 		String receivedMessage = array.length >= 3 ? array[2] : "";
 		String whoShouldReceive = array.length == 4 ? array[3] : "";
-
+				
 		switch (receivedIdentifier) {
 
 		/*
@@ -123,11 +124,11 @@ public class Controller {
 			if (ImMaster && !senderPlayerId.equals(player.getId())) {
 
 				String publicKey = convertPublicKey(player.getPublicKey());
-				sendData(Constants.I_AM_A_MASTER, publicKey, "");
+				sendData(Constants.I_AM_A_MASTER, publicKey, "nada");
 
 				if (ManagesTheList.findPlayerById(getPlayers(), senderPlayerId) == null) {
 					Player player = new Player(senderPlayerId);
-					// newPlayer.setPublicKey(recoveryPublicKey(receivedMessage));
+					player.setPublicKey(recoveryPublicKey(receivedMessage));
 					getPlayers().add(player);
 				}
 
@@ -161,10 +162,12 @@ public class Controller {
 		case Constants.PLAYER_SELECT_LETTER:
 
 			if (whoShouldReceive.equals(player.getId()) && nowIsLetter) {
+				String received = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
+				System.out.println("Sou eu mesmo");
 				// jogador espera usuario digitar uma letra
 				String letter = new Ui().getUiLetter();
 				String encrypt = letter;
-				sendData(Constants.MASTER_LETTER_SELECTED_BY_THE_PLAYER, encrypt, "");
+				sendData(Constants.MASTER_LETTER_SELECTED_BY_THE_PLAYER, encrypt, "nada");
 			} else {
 				nowIsLetter = true;
 			}
@@ -190,7 +193,7 @@ public class Controller {
 				String temp = VerifyLetterWord.status(hiddenWord, chosenLetter);
 				temp += Punctuation.buildPunctuation(getPlayers());
 
-				sendData(Constants.PLAYER_PUNCTUATION, temp, "");
+				sendData(Constants.PLAYER_PUNCTUATION, temp, "nada");
 
 				String encode = "nada";
 				sendData(Constants.PLAYER_SELECT_WORD, encode, currentPlayer.getId());
@@ -201,31 +204,31 @@ public class Controller {
 			if (VerifyLetterWord.letterAlreadKick(letter, chosenLetter)) {
 				Log.master("Que burro a letra ja foi usada!!!!");
 				players = ManagesTheList.setPunctuation(getPlayers(), currentPlayer, Punctuation.punctuationWrong());
-				sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_ALREAD_CHOSEN, "");
+				sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_ALREAD_CHOSEN, "nada");
 			} else {
 				chosenLetter.add(letter);
 				if (VerifyLetterWord.hitTheLetter(hiddenWord, letter)) {
 					Log.master("Acertou a letra");
 					players = ManagesTheList.setPunctuation(getPlayers(), currentPlayer,
 							Punctuation.punctuationRight());
-					sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_RIGHT, "");
+					sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_RIGHT, "nada");
 				} else {
 					Log.master("ERRO!!! nao tem essa letra");
 					players = ManagesTheList.setPunctuation(getPlayers(), currentPlayer,
 							Punctuation.punctuationWrong());
-					sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_WRONG, "");
+					sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_WRONG, "nada");
 				}
 			}
 
 			// verifica se acertou a palavra
 			if (VerifyLetterWord.discoveryTheWord(hiddenWord, chosenLetter)) {
 				Log.master("ACABOU!!!! ACABOU!!!! EH TETRA!!!!");
-				sendData(Constants.CONGRATULATIONS, "", "");
+				sendData(Constants.CONGRATULATIONS, "nada", "nada");
 
 				String temp = VerifyLetterWord.status(hiddenWord, chosenLetter);
 				temp += Punctuation.buildPunctuation(getPlayers());
 
-				sendData(Constants.PLAYER_PUNCTUATION, temp, "");
+				sendData(Constants.PLAYER_PUNCTUATION, temp, "nada");
 
 				/*
 				 * Notifica os usuario para o novo mestre assumir
@@ -242,7 +245,7 @@ public class Controller {
 				String temp = VerifyLetterWord.status(hiddenWord, chosenLetter);
 				temp += Punctuation.buildPunctuation(getPlayers());
 
-				sendData(Constants.PLAYER_PUNCTUATION, temp, "");
+				sendData(Constants.PLAYER_PUNCTUATION, temp, "nada");
 
 				String encode = "nada";
 				sendData(Constants.PLAYER_SELECT_WORD, encode, currentPlayer.getId());
@@ -259,9 +262,9 @@ public class Controller {
 				String word = new Ui().getUiWord();
 				String encrypt = word;
 				if (word.length() == 1)
-					sendData(Constants.MASTER_PASSING_TIME_BY_PLAYER, "", "");
+					sendData(Constants.MASTER_WORD_SELECTED_BY_THE_PLAYER, "nada", "nada");
 				else
-					sendData(Constants.MASTER_WORD_SELECTED_BY_THE_PLAYER, encrypt, "");
+					sendData(Constants.MASTER_WORD_SELECTED_BY_THE_PLAYER, encrypt, "nada");
 			}
 			break;
 
@@ -299,12 +302,12 @@ public class Controller {
 			// verifica se a palavra foi descoberta
 			if (hiddenWord.equals(word)) {
 				Log.master("ACABOU!!!! ACABOU!!!! EH TETRA!!!!");
-				sendData(Constants.CONGRATULATIONS, "", "");
+				sendData(Constants.CONGRATULATIONS, "nada", "nada");
 
 				String temp2 = VerifyLetterWord.status(hiddenWord, chosenLetter);
 				temp2 += Punctuation.buildPunctuation(getPlayers());
 
-				sendData(Constants.PLAYER_PUNCTUATION, temp2, "");
+				sendData(Constants.PLAYER_PUNCTUATION, temp2, "nada");
 
 				/*
 				 * Notifica os usuario para o novo mestre assumir
@@ -315,12 +318,12 @@ public class Controller {
 				String temp2 = VerifyLetterWord.status(hiddenWord, chosenLetter);
 				temp2 += Punctuation.buildPunctuation(getPlayers());
 
-				sendData(Constants.PLAYER_PUNCTUATION, temp2, "");
+				sendData(Constants.PLAYER_PUNCTUATION, temp2, "nada");
 
 				currentPlayer = ManagesTheList.nextPlayer(getPlayers(), player, currentPlayer);
 				Log.master("ERRO!! Proximo!!!!");
 
-				String encode = "nada";
+				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
 				sendData(Constants.PLAYER_SELECT_LETTER, encode, currentPlayer.getId());
 			}
 			break;
@@ -353,7 +356,7 @@ public class Controller {
 			else {
 				ImMaster = false;
 				String publicKey = convertPublicKey(player.getPublicKey());
-				sendData(Constants.INITIAL_HANDSHAKE, publicKey, "");
+				sendData(Constants.INITIAL_HANDSHAKE, publicKey, "nada");
 			}
 			break;
 
@@ -386,7 +389,7 @@ public class Controller {
 		 */
 		if (identifier.equals(Constants.PLAYER_SELECT_LETTER) || identifier.equals(Constants.PLAYER_SELECT_WORD)) {
 			
-			String message = player.getId() + ":" + identifier + ":" + data + ":" + idDestination;
+			String message = player.getId() + " - " + identifier + " - " + data + " - " + idDestination;
 			new MulticastSender().send(message);
 			
 			Log.time();
@@ -398,7 +401,7 @@ public class Controller {
 					// TODO Auto-generated method stub
 					Log.time();
 					if (numAttemptsNotification < MAXIMUM_NOTIFICATIONS) {
-						String message = player.getId() + ":" + identifier + ":" + data + ":" + idDestination;
+						String message = player.getId() + " - " + identifier + " - " + data + " - " + idDestination;
 						new MulticastSender().send(message);
 						numAttemptsNotification++;
 					} else {
@@ -407,7 +410,7 @@ public class Controller {
 						currentPlayer = ManagesTheList.nextPlayer(getPlayers(), player, currentPlayer);
 
 						// requisita letra do proximo jogador
-						String encode = "nada";
+						String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
 						sendData(Constants.PLAYER_SELECT_LETTER, encode, currentPlayer.getId());
 
 					}
@@ -419,7 +422,7 @@ public class Controller {
 			// jogador
 
 		} else {
-			String message = player.getId() + ":" + identifier + ":" + data + ":" + idDestination;
+			String message = player.getId() + " - " + identifier + " - " + data + " - " + idDestination;
 			new MulticastSender().send(message);
 		}
 	}
@@ -457,6 +460,7 @@ public class Controller {
 
 		ObjectInputStream inputStream = null;
 		PublicKey publicKey = null;
+		
 		try {
 
 			byte[] array = message.getBytes("ISO-8859-1");
