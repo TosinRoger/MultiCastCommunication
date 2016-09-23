@@ -1,8 +1,6 @@
 package br.com.tosin.sd.multicast.ui;
 
 import java.io.*;
-import java.util.Scanner;
-
 
 public class Ui {
 
