@@ -1,6 +1,5 @@
 package br.com.tosin.sd.multicast.controller;
 
-import java.io.*;
 import java.security.PublicKey;
 import java.util.*;
 
@@ -102,6 +101,8 @@ public class Controller {
 		
 		String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
 		System.out.println("Primeiro jogador sera: " + currentPlayer.getId());
+
+		timer = new Timer();
 		sendData(Constants.PLAYER_SELECT_LETTER, encode, currentPlayer.getId());
 	}
 
@@ -163,7 +164,7 @@ public class Controller {
 		case Constants.PLAYER_SELECT_LETTER:
 
 			if (whoShouldReceive.equals(player.getId()) && nowIsLetter) {
-				String received = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
+//				String received = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
 				// jogador espera usuario digitar uma letra
 				String letter = new Ui().getUiLetter();
 				if (letter.isEmpty())
@@ -171,7 +172,7 @@ public class Controller {
 				else 
 					letter = letter.substring(0, 1);
 				String encrypt = Criptography.criptografa(letter, publicKeyMaster);
-				sendData(Constants.MASTER_LETTER_SELECTED_BY_THE_PLAYER, encrypt, "nada");
+				sendData(Constants.MASTER_LETTER_SELECTED_BY_THE_PLAYER, encrypt, letter);
 			} else {
 				nowIsLetter = true;
 			}
@@ -191,6 +192,8 @@ public class Controller {
 			String letter = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
 			letter = receivedMessage;
 			letter = letter.substring(0,1);
+			//TODO por tosin [22 de set de 2016] Chuncho, a letra esta chegando errada na maioria das vezes
+			letter = whoShouldReceive;
 
 			ui.showSimpleMessage("Recebeu a letra: " + letter);
 			
@@ -202,6 +205,8 @@ public class Controller {
 				sendData(Constants.PLAYER_PUNCTUATION, temp, "nada");
 
 				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
+
+				timer = new Timer();
 				sendData(Constants.PLAYER_SELECT_WORD, encode, currentPlayer.getId());
 				break;
 			}
@@ -255,6 +260,8 @@ public class Controller {
 				sendData(Constants.PLAYER_PUNCTUATION, temp, "nada");
 
 				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
+
+				timer = new Timer();
 				sendData(Constants.PLAYER_SELECT_WORD, encode, currentPlayer.getId());
 			}
 			break;
@@ -341,6 +348,8 @@ public class Controller {
 				}
 
 				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
+
+				timer = new Timer();
 				sendData(Constants.PLAYER_SELECT_LETTER, encode, currentPlayer.getId());
 			}
 			break;
@@ -417,7 +426,6 @@ public class Controller {
 			new MulticastSender().send(message);
 			
 			Log.time();
-			timer = new Timer();
 			timer.schedule(new TimerTask() {
 
 				@Override
@@ -435,6 +443,8 @@ public class Controller {
 
 						// requisita letra do proximo jogador
 						String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
+
+						timer = new Timer();
 						sendData(Constants.PLAYER_SELECT_LETTER, encode, currentPlayer.getId());
 
 					}
