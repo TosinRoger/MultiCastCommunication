@@ -73,21 +73,21 @@ public class Ui {
 	 * Mostra mensagem de letra ja escolhida
 	 */
 	public void setUiLetterAlreadChoisen() {
-		System.out.println("Essa letra ja foi escolhida\n");
+		System.out.println("\nEssa letra ja foi escolhida\n");
 	}
 
 	/**
 	 * Mostra mensagem de letra errada
 	 */
 	public void setUiLetterWrong() {
-		System.out.println("Essa palavra nao contem essa letra\n");
+		System.out.println("\nEssa palavra nao contem essa letra\n");
 	}
 
 	/**
 	 * Mostra mensagem de letra acertada
 	 */
 	public void setUiLetterRight() {
-		System.out.println("Parabéns voce acertou essa letra\n");
+		System.out.println("\nParabéns voce acertou essa letra\n");
 	}
 
 	/**

@@ -30,4 +30,6 @@ public class Constants {
 	public static final String LETTER_WRONG = "Letter wrong";
 	public static final String LETTER_RIGHT = "Letter right";
 
+
+	public static final String LIST = "Letter right";
 }

@@ -87,7 +87,7 @@ public class Controller {
 	 */
 	private void askAnotherPlayer() {
 
-		String publicKey = convertPublicKey(player.getPublicKey());
+		String publicKey = ParsePublicKey.convertPublicKey(player.getPublicKey());
 		sendData(Constants.INITIAL_HANDSHAKE, publicKey, "nada");
 	}
 
@@ -123,12 +123,12 @@ public class Controller {
 
 			if (ImMaster && !senderPlayerId.equals(player.getId())) {
 
-				String publicKey = convertPublicKey(player.getPublicKey());
+				String publicKey = ParsePublicKey.convertPublicKey(player.getPublicKey());
 				sendData(Constants.I_AM_A_MASTER, publicKey, "nada");
 
 				if (ManagesTheList.findPlayerById(getPlayers(), senderPlayerId) == null) {
 					Player player = new Player(senderPlayerId);
-					player.setPublicKey(recoveryPublicKey(receivedMessage));
+					player.setPublicKey(ParsePublicKey.recoveryPublicKey(receivedMessage));
 					getPlayers().add(player);
 				}
 
@@ -137,7 +137,7 @@ public class Controller {
 					gameStarted = true;
 					startTheGame();
 				}
-
+				sendData(Constants.LIST, ParseList.parseListToString(getPlayers()), Constants.EMPTY);
 			}
 			break;
 
@@ -153,6 +153,7 @@ public class Controller {
 				}
 			} else {
 				ImMaster = false;
+				publicKeyMaster = ParsePublicKey.recoveryPublicKey(receivedMessage);
 			}
 			break;
 
@@ -165,6 +166,10 @@ public class Controller {
 				String received = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
 				// jogador espera usuario digitar uma letra
 				String letter = new Ui().getUiLetter();
+				if (letter.isEmpty())
+					letter = Constants.EMPTY;
+				else 
+					letter = letter.substring(0, 1);
 				String encrypt = Criptography.criptografa(letter, publicKeyMaster);
 				sendData(Constants.MASTER_LETTER_SELECTED_BY_THE_PLAYER, encrypt, "nada");
 			} else {
@@ -185,13 +190,15 @@ public class Controller {
 			// TODO por tosin [21 de set de 2016] Decriptografar
 			String letter = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
 			letter = receivedMessage;
+			letter = letter.substring(0,1);
 
 			ui.showSimpleMessage("Recebeu a letra: " + letter);
 			
-			if (letter.isEmpty()) {
+			if (letter.isEmpty() || letter.equals(Constants.EMPTY)) {
 				String temp = VerifyLetterWord.status(hiddenWord, chosenLetter);
 				temp += Punctuation.buildPunctuation(getPlayers());
 
+				sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_WRONG, currentPlayer.getId());
 				sendData(Constants.PLAYER_PUNCTUATION, temp, "nada");
 
 				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
@@ -205,7 +212,8 @@ public class Controller {
 				players = ManagesTheList.setPunctuation(getPlayers(), currentPlayer, Punctuation.punctuationWrong());
 				sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_ALREAD_CHOSEN, "nada");
 			} else {
-				chosenLetter.add(letter);
+				if(letter.length() == 1)
+					chosenLetter.add(letter);
 				if (VerifyLetterWord.hitTheLetter(hiddenWord, letter)) {
 					Log.master("Acertou a letra");
 					players = ManagesTheList.setPunctuation(getPlayers(), currentPlayer,
@@ -258,7 +266,7 @@ public class Controller {
 			if (whoShouldReceive.equals(player.getId())) {
 				String received = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
 				if (received.equals(Constants.EMPTY))
-					ui.showSimpleMessage("Mensagem chegou errada");
+					ui.showSimpleMessage("Mensagem chegou errada....\n\n");
 				
 				nowIsLetter = !nowIsLetter;
 				// jogador espera usuario digitar uma letra
@@ -291,6 +299,7 @@ public class Controller {
 			}
 
 			break;
+			
 		case Constants.MASTER_WORD_SELECTED_BY_THE_PLAYER:
 			if (!ImMaster)
 				break;
@@ -346,24 +355,20 @@ public class Controller {
 			new Ui().finish(decripto);
 			System.out.println("Fim de jogo o novo mestre sera: " + decripto);
 			nowIsLetter = true;
+			chosenLetter.clear();
+			hiddenWord = "";
 			if (player.getId().equals(decripto)) {
 				ImMaster = true;
 				gameStarted = false;
 				getPlayers().clear();
 				getPlayers().add(player);
-				chosenLetter.clear();
-				hiddenWord = "";
 
-				// envia mensagem para o antigo mestre pedindo sua
-				// credenciais
-
-//				startTheGame();
 			}
 			// se nao for o novo mestre envia um handshake para o novo
 			// mestre
 			else {
 				ImMaster = false;
-				String publicKey = convertPublicKey(player.getPublicKey());
+				String publicKey = ParsePublicKey.convertPublicKey(player.getPublicKey());
 				sendData(Constants.INITIAL_HANDSHAKE, publicKey, "nada");
 			}
 			break;
@@ -375,6 +380,17 @@ public class Controller {
 			new Ui().GameOver();
 			break;
 
+		case Constants.LIST: 
+//			if (!ImMaster) {
+//				System.out.println("Sincronizou a lista");
+//				List<Player> temp = ParseList.parseStringToList(receivedMessage);
+//				if(temp != null && !temp.isEmpty()) {
+//					getPlayers().clear();
+//					getPlayers().addAll(temp);
+//					publicKeyMaster = getPlayers().get(0).getPublicKey();
+//				}
+//			}
+			break;
 		default:
 			break;
 		}
@@ -433,57 +449,6 @@ public class Controller {
 			String message = player.getId() + " - " + identifier + " - " + data + " - " + idDestination;
 			new MulticastSender().send(message);
 		}
-	}
-
-	/**
-	 * Converte um public key em um string
-	 * 
-	 * @param publicKey
-	 * @return
-	 */
-	private String convertPublicKey(PublicKey publicKey) {
-		String result = "";
-		try {
-			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream(buffer);
-			oos.writeObject(publicKey);
-			result = new String(buffer.toByteArray(), "ISO-8859-1");
-			oos.close();
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return result;
-	}
-
-	/**
-	 * Recupera a publickey que esta armazenda em um string
-	 * 
-	 * @param message
-	 * @return
-	 */
-	private PublicKey recoveryPublicKey(String message) {
-
-		ObjectInputStream inputStream = null;
-		PublicKey publicKey = null;
-		
-		try {
-
-			byte[] array = message.getBytes("ISO-8859-1");
-			ByteArrayInputStream bis = new ByteArrayInputStream(array);
-
-			inputStream = new ObjectInputStream(bis);
-
-			publicKey = (PublicKey) inputStream.readObject();
-
-		} catch (IOException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return publicKey;
 	}
 
 	public List<Player> getPlayers() {
