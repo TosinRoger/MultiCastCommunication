@@ -7,15 +7,15 @@ import br.com.tosin.sd.multicast.models.Player;
 public class Punctuation {
 
 	
-	public int punctuationRight() {
+	public static int punctuationRight() {
 		return 5;
 	}
 	
-	public int punctuationWrong() {
+	public static int punctuationWrong() {
 		return -1;
 	}
 	
-	public String buildPunctuation(List<Player> players) {
+	public static String buildPunctuation(List<Player> players) {
 		String result = "";
 		result = "PUNCTUATION;";
 		
