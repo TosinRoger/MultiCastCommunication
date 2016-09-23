@@ -25,9 +25,9 @@ public class Criptography {
 	
 	
 	/**
-     * Criptografa o texto puro usando chave publica.
+     * Criptografa o texto puro usando chave private.
      */
-    public static String criptografa(String texto, PublicKey chave) {
+    public static String criptografa(String texto, PrivateKey chave) {
       byte[] cipherText = null;
       String result = "";
       
@@ -47,9 +47,9 @@ public class Criptography {
     }
     
     /**
-     * Decriptografa o texto puro usando chave privada.
+     * Decriptografa o texto puro usando chave public.
      */
-    public static String decriptografa(String message, PrivateKey chave) {
+    public static String decriptografa(String message, PublicKey chave) {
       byte[] dectyptedText = null;
       String result = "";
       
