@@ -28,4 +28,10 @@ public class Log {
 
 		System.out.println(date + " O mestre disse: " + msg);
 	}
+	
+	public static void time() {
+		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date(System.currentTimeMillis()));
+
+		System.out.println("Time: " + date);
+	}
 }
