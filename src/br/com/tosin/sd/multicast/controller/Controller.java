@@ -1,6 +1,5 @@
 package br.com.tosin.sd.multicast.controller;
 
-import java.security.PublicKey;
 import java.util.*;
 
 import br.com.tosin.sd.multicast.interfaces.Response;
@@ -27,10 +26,6 @@ public class Controller {
 	private String hiddenWord;
 	private boolean gameStarted = false;
 	Timer timer = new Timer();
-
-	// Usado pelo jogador
-
-	private PublicKey publicKeyMaster;
 
 	// ==================================================
 
@@ -99,11 +94,10 @@ public class Controller {
 		hiddenWord = new DatabaseWords().randonWord();
 		currentPlayer = ManagesTheList.nextPlayer(getPlayers(), player, null);
 		
-		String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
 		System.out.println("Primeiro jogador sera: " + currentPlayer.getId());
 
 		timer = new Timer();
-		sendData(Constants.PLAYER_SELECT_LETTER, encode, currentPlayer.getId());
+		sendData(Constants.PLAYER_SELECT_LETTER, Constants.EMPTY, currentPlayer.getId());
 	}
 
 	private void processesMessage(String message) {
@@ -129,7 +123,7 @@ public class Controller {
 
 				if (ManagesTheList.findPlayerById(getPlayers(), senderPlayerId) == null) {
 					Player player = new Player(senderPlayerId);
-					player.setPublicKey(ParsePublicKey.recoveryPublicKey(receivedMessage));
+					player.setPublicKey(ParsePublicKey.recoveryPublicKey(receivedMessage.trim()));
 					getPlayers().add(player);
 				}
 
@@ -154,7 +148,6 @@ public class Controller {
 				}
 			} else {
 				ImMaster = false;
-				publicKeyMaster = ParsePublicKey.recoveryPublicKey(receivedMessage);
 			}
 			break;
 
@@ -164,14 +157,17 @@ public class Controller {
 		case Constants.PLAYER_SELECT_LETTER:
 
 			if (whoShouldReceive.equals(player.getId()) && nowIsLetter) {
-//				String received = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
+
 				// jogador espera usuario digitar uma letra
 				String letter = new Ui().getUiLetter();
 				if (letter.isEmpty())
 					letter = Constants.EMPTY;
 				else 
 					letter = letter.substring(0, 1);
-				String encrypt = Criptography.criptografa(letter, publicKeyMaster);
+				
+				letter = letter.concat("TESTE");
+				String encrypt = Criptography.criptografa(letter, player.getPrivateKey());
+				
 				sendData(Constants.MASTER_LETTER_SELECTED_BY_THE_PLAYER, encrypt, letter);
 			} else {
 				nowIsLetter = true;
@@ -188,8 +184,7 @@ public class Controller {
 			timer.cancel();
 			numAttemptsNotification = 0;
 
-			// TODO por tosin [21 de set de 2016] Decriptografar
-			String letter = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
+			String letter = Criptography.decriptografa(receivedMessage, currentPlayer.getPublicKey());
 			letter = receivedMessage;
 			letter = letter.substring(0,1);
 			//TODO por tosin [22 de set de 2016] Chuncho, a letra esta chegando errada na maioria das vezes
@@ -204,10 +199,8 @@ public class Controller {
 				sendData(Constants.PLAYER_HIT_THE_LETTER, Constants.LETTER_WRONG, currentPlayer.getId());
 				sendData(Constants.PLAYER_PUNCTUATION, temp, "nada");
 
-				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
-
 				timer = new Timer();
-				sendData(Constants.PLAYER_SELECT_WORD, encode, currentPlayer.getId());
+				sendData(Constants.PLAYER_SELECT_WORD, Constants.EMPTY, currentPlayer.getId());
 				break;
 			}
 
@@ -259,10 +252,8 @@ public class Controller {
 
 				sendData(Constants.PLAYER_PUNCTUATION, temp, "nada");
 
-				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
-
 				timer = new Timer();
-				sendData(Constants.PLAYER_SELECT_WORD, encode, currentPlayer.getId());
+				sendData(Constants.PLAYER_SELECT_WORD, Constants.EMPTY, currentPlayer.getId());
 			}
 			break;
 
@@ -271,14 +262,11 @@ public class Controller {
 		 */
 		case Constants.PLAYER_SELECT_WORD:
 			if (whoShouldReceive.equals(player.getId())) {
-				String received = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
-				if (received.equals(Constants.EMPTY))
-					ui.showSimpleMessage("Mensagem chegou errada....\n\n");
 				
 				nowIsLetter = !nowIsLetter;
 				// jogador espera usuario digitar uma letra
 				String word = new Ui().getUiWord();
-				String encrypt = Criptography.criptografa(word, publicKeyMaster);
+				String encrypt = Criptography.criptografa(word, player.getPrivateKey());
 				if (word.length() == 1)
 					sendData(Constants.MASTER_WORD_SELECTED_BY_THE_PLAYER, "nada", "nada");
 				else
@@ -315,7 +303,7 @@ public class Controller {
 			numAttemptsNotification = 0;
 
 			// TODO por tosin [22 de set de 2016] decriptar
-			String word = Criptography.decriptografa(receivedMessage, player.getPrivateKey());
+			String word = Criptography.decriptografa(receivedMessage, currentPlayer.getPublicKey());
 			ui.showSimpleMessage("Player: " + senderPlayerId + " chutou a palavra: " + word);
 
 			// verifica se a palavra foi descoberta
@@ -347,10 +335,9 @@ public class Controller {
 					Log.master("ERRO!! Proximo!!!!");
 				}
 
-				String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
-
+				
 				timer = new Timer();
-				sendData(Constants.PLAYER_SELECT_LETTER, encode, currentPlayer.getId());
+				sendData(Constants.PLAYER_SELECT_LETTER, Constants.EMPTY, currentPlayer.getId());
 			}
 			break;
 
@@ -364,7 +351,7 @@ public class Controller {
 			new Ui().finish(decripto);
 			System.out.println("Fim de jogo o novo mestre sera: " + decripto);
 			nowIsLetter = true;
-			chosenLetter.clear();
+			chosenLetter = new ArrayList<>();
 			hiddenWord = "";
 			if (player.getId().equals(decripto)) {
 				ImMaster = true;
@@ -442,10 +429,9 @@ public class Controller {
 						currentPlayer = ManagesTheList.nextPlayer(getPlayers(), player, currentPlayer);
 
 						// requisita letra do proximo jogador
-						String encode = Criptography.criptografa(Constants.EMPTY, currentPlayer.getPublicKey());
-
+						
 						timer = new Timer();
-						sendData(Constants.PLAYER_SELECT_LETTER, encode, currentPlayer.getId());
+						sendData(Constants.PLAYER_SELECT_LETTER, Constants.EMPTY, currentPlayer.getId());
 
 					}
 				}
