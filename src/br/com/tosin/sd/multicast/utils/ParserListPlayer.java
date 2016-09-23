@@ -4,7 +4,7 @@ import java.util.*;
 
 import br.com.tosin.sd.multicast.models.Player;
 
-public class Parser {
+public class ParserListPlayer {
 
 	/**
 	 * Transforma a lista em string para se enviada para outros usuarios
